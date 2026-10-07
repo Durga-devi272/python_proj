@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}EduPulse — Modern E-Learning Platform{% endblock %}</title>
+  <meta name="description" content="Master coding, databases, and computer science skills with structured modules, real-world lessons, interactive assessments and verified certificates.">
+  
+  <!-- Google Fonts & FontAwesome -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="/static/css/style.css">
+  {% block styles %}{% endblock %}
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <div class="container nav-wrapper">
+      <a href="/" class="brand-logo">
+        <div class="brand-icon">
+          <i class="fa-solid fa-graduation-cap"></i>
+        </div>
+        <span>EduPulse</span>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="/courses" class="nav-link"><i class="fa-solid fa-compass" style="margin-right: 4px;"></i> Explore Courses</a></li>
+        {% if user and user.role == 'student' %}
+        <li><a href="/dashboard" class="nav-link"><i class="fa-solid fa-gauge-high" style="margin-right: 4px;"></i> Dashboard</a></li>
+        <li><a href="/progress" class="nav-link"><i class="fa-solid fa-chart-line" style="margin-right: 4px;"></i> My Progress</a></li>
+        {% elif user and user.role == 'admin' %}
+        <li><a href="/admin/dashboard" class="nav-link"><i class="fa-solid fa-shield-halved" style="margin-right: 4px;"></i> Admin Portal</a></li>
+        <li><a href="/admin/courses" class="nav-link">Manage Courses</a></li>
+        <li><a href="/admin/students" class="nav-link">Students</a></li>
+        {% endif %}
+      </ul>
+
+      <div class="nav-actions">
+        {% if user %}
+        <div class="user-dropdown">
+          <button class="avatar-btn" data-dropdown-toggle="user-menu" id="user-menu-btn" type="button">
+            <div class="avatar-circle">
+              {{ user.name[0].upper() if user.name else 'U' }}
+            </div>
+            <span style="font-weight: 600; font-size: 0.9rem; color: var(--slate-800);">{{ user.name }}</span>
+            <i class="fa-solid fa-chevron-down" style="font-size: 0.75rem; color: var(--slate-400);"></i>
+          </button>
+          <div class="dropdown-menu" id="user-menu">
+            <div style="padding: 0.5rem 0.85rem; border-bottom: 1px solid var(--border-color); margin-bottom: 0.25rem;">
+              <p style="font-size: 0.85rem; font-weight: 600; color: var(--slate-900);">{{ user.name }}</p>
+              <p style="font-size: 0.75rem; color: var(--slate-500);">{{ user.email }}</p>
+              <span class="badge badge-primary" style="margin-top: 0.35rem; font-size: 0.65rem;">{{ user.role.upper() }}</span>
+            </div>
+            {% if user.role == 'student' %}
+            <a href="/dashboard" class="dropdown-item"><i class="fa-solid fa-gauge"></i> Dashboard</a>
+            <a href="/progress" class="dropdown-item"><i class="fa-solid fa-chart-simple"></i> Learning Analytics</a>
+            <a href="/profile" class="dropdown-item"><i class="fa-solid fa-user-gear"></i> Account Settings</a>
+            {% else %}
+            <a href="/admin/dashboard" class="dropdown-item"><i class="fa-solid fa-chart-pie"></i> Admin Analytics</a>
+            <a href="/admin/courses" class="dropdown-item"><i class="fa-solid fa-book"></i> Course Manager</a>
+            <a href="/admin/students" class="dropdown-item"><i class="fa-solid fa-users"></i> Student Directory</a>
+            {% endif %}
+            <div class="dropdown-divider"></div>
+            <a href="/logout" class="dropdown-item" style="color: var(--danger);"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</a>
+          </div>
+        </div>
+        {% else %}
+        <a href="/login" class="btn btn-ghost">Sign In</a>
+        <a href="/register" class="btn btn-primary">Get Started</a>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content Area -->
+  <main class="main-content">
+    {% if custom_content %}
+      {{ custom_content | safe }}
+    {% else %}
+      {% block content %}{% endblock %}
+    {% endif %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <a href="/" class="brand-logo" style="margin-bottom: 1rem;">
+            <div class="brand-icon">
+              <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+            <span>EduPulse</span>
+          </a>
+          <p style="color: var(--slate-500); font-size: 0.925rem; max-width: 340px; margin-bottom: 1.5rem;">
+            A premier production-grade learning management platform engineered to deliver rigorous programming curricula, interactive quizzes, and in-depth performance analytics.
+          </p>
+          <div style="display: flex; gap: 0.75rem;">
+            <span class="badge badge-primary"><i class="fa-brands fa-python"></i> Python & FastAPI</span>
+            <span class="badge badge-success"><i class="fa-solid fa-database"></i> SQLite & SQLA</span>
+          </div>
+        </div>
+
+        <div class="footer-col">
+          <h4>Explore Learning</h4>
+          <ul class="footer-links">
+            <li><a href="/courses?category=Python+Programming">Python Programming</a></li>
+            <li><a href="/courses?category=Data+Structures">Data Structures & Algo</a></li>
+            <li><a href="/courses?category=Database+Management">Database Systems (SQL)</a></li>
+            <li><a href="/courses?category=Web+Development">Web Full-Stack</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Platform</h4>
+          <ul class="footer-links">
+            <li><a href="/courses">All Courses</a></li>
+            <li><a href="/login">Student Sign In</a></li>
+            <li><a href="/register">Create Account</a></li>
+            <li><a href="/admin/dashboard">Admin Console</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Support & Security</h4>
+          <ul class="footer-links">
+            <li><a href="#!"><i class="fa-solid fa-lock" style="margin-right: 4px;"></i> JWT & Bcrypt Protected</a></li>
+            <li><a href="#!"><i class="fa-solid fa-shield" style="margin-right: 4px;"></i> Role-Based Access</a></li>
+            <li><a href="#!"><i class="fa-solid fa-code" style="margin-right: 4px;"></i> REST API Specs</a></li>
+            <li><a href="#!"><i class="fa-solid fa-certificate" style="margin-right: 4px;"></i> Verified Assessments</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>&copy; 2026 EduPulse E-Learning Platform. Built with Python, FastAPI, and Vanilla CSS.</p>
+        <p><i class="fa-solid fa-bolt" style="color: var(--warning);"></i> Production Architecture</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="/static/js/main.js"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,217 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Question Builder: {{ assessment.title }} — EduPulse Admin{% endblock %}
+
+{% block admin_content %}
+<div class="admin-header">
+  <div>
+    <a href="/admin/assessments" style="font-size: 0.85rem; color: var(--slate-500); font-weight: 600;">
+      <i class="fa-solid fa-arrow-left"></i> Back to Assessments
+    </a>
+    <h1 style="font-size: 1.85rem; color: var(--slate-900); margin-top: 0.35rem;">
+      Question Bank: {{ assessment.title }}
+    </h1>
+    <p style="color: var(--slate-500); font-size: 0.9rem;">
+      Course: <strong>{{ assessment.course.title }}</strong> &bull; Passing Threshold: <strong>{{ assessment.pass_percentage }}%</strong>
+    </p>
+  </div>
+
+  <button type="button" class="btn btn-primary" data-modal-target="add-question-modal">
+    <i class="fa-solid fa-plus"></i> Add Question
+  </button>
+</div>
+
+<!-- Questions List -->
+<div style="display: flex; flex-direction: column; gap: 1.5rem; max-width: 900px;">
+  {% if assessment.questions | length > 0 %}
+    {% for q in assessment.questions %}
+    <div class="card" style="padding: 1.75rem; border: 1px solid var(--border-color);">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+        <span style="font-size: 0.8rem; font-weight: 700; color: var(--primary); text-transform: uppercase;">
+          Question #{{ loop.index }}
+        </span>
+        <div style="display: flex; gap: 0.35rem;">
+          <button type="button" class="btn btn-ghost btn-sm" 
+                  onclick="openEditQuestionModal({{ q.id }}, `{{ q.question_text | escape }}`, `{{ q.option_a | escape }}`, `{{ q.option_b | escape }}`, `{{ q.option_c | escape }}`, `{{ q.option_d | escape }}`, '{{ q.correct_option }}', `{{ q.explanation | escape }}`)">
+            <i class="fa-solid fa-pen"></i> Edit
+          </button>
+          <form action="/admin/questions/{{ q.id }}/delete" method="POST" style="display: inline;" onsubmit="return confirm('Delete this question?');">
+            <button type="submit" class="btn btn-ghost btn-sm" style="color: var(--danger);">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <h3 style="font-size: 1.15rem; color: var(--slate-900); margin-bottom: 1.25rem;">{{ q.question_text }}</h3>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
+        <div style="padding: 0.65rem 0.9rem; border-radius: var(--radius-sm); font-size: 0.875rem;
+             {% if q.correct_option == 'A' %}background: #ecfdf5; border: 1.5px solid #10b981; color: #065f46; font-weight: 600;{% else %}background: var(--slate-50); border: 1px solid var(--border-color); color: var(--slate-700);{% endif %}">
+          <strong>A.</strong> {{ q.option_a }} {% if q.correct_option == 'A' %}<i class="fa-solid fa-check" style="color: var(--success); margin-left: 4px;"></i>{% endif %}
+        </div>
+        <div style="padding: 0.65rem 0.9rem; border-radius: var(--radius-sm); font-size: 0.875rem;
+             {% if q.correct_option == 'B' %}background: #ecfdf5; border: 1.5px solid #10b981; color: #065f46; font-weight: 600;{% else %}background: var(--slate-50); border: 1px solid var(--border-color); color: var(--slate-700);{% endif %}">
+          <strong>B.</strong> {{ q.option_b }} {% if q.correct_option == 'B' %}<i class="fa-solid fa-check" style="color: var(--success); margin-left: 4px;"></i>{% endif %}
+        </div>
+        <div style="padding: 0.65rem 0.9rem; border-radius: var(--radius-sm); font-size: 0.875rem;
+             {% if q.correct_option == 'C' %}background: #ecfdf5; border: 1.5px solid #10b981; color: #065f46; font-weight: 600;{% else %}background: var(--slate-50); border: 1px solid var(--border-color); color: var(--slate-700);{% endif %}">
+          <strong>C.</strong> {{ q.option_c }} {% if q.correct_option == 'C' %}<i class="fa-solid fa-check" style="color: var(--success); margin-left: 4px;"></i>{% endif %}
+        </div>
+        <div style="padding: 0.65rem 0.9rem; border-radius: var(--radius-sm); font-size: 0.875rem;
+             {% if q.correct_option == 'D' %}background: #ecfdf5; border: 1.5px solid #10b981; color: #065f46; font-weight: 600;{% else %}background: var(--slate-50); border: 1px solid var(--border-color); color: var(--slate-700);{% endif %}">
+          <strong>D.</strong> {{ q.option_d }} {% if q.correct_option == 'D' %}<i class="fa-solid fa-check" style="color: var(--success); margin-left: 4px;"></i>{% endif %}
+        </div>
+      </div>
+
+      {% if q.explanation %}
+      <div style="background: var(--slate-100); border-radius: var(--radius-sm); padding: 0.75rem 1rem; font-size: 0.825rem; color: var(--slate-600);">
+        <strong style="color: var(--slate-800);"><i class="fa-solid fa-circle-info"></i> Explanation:</strong> {{ q.explanation }}
+      </div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="card" style="text-align: center; padding: 3.5rem 2rem;">
+      <i class="fa-solid fa-circle-question" style="font-size: 2.5rem; color: var(--slate-300); margin-bottom: 1rem;"></i>
+      <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">No Questions Created Yet</h3>
+      <p style="color: var(--slate-500); font-size: 0.9rem; margin-bottom: 1.5rem;">
+        Add MCQ questions with 4 selectable choices, a designated correct answer, and detailed explanations.
+      </p>
+      <button type="button" class="btn btn-primary" data-modal-target="add-question-modal">
+        <i class="fa-solid fa-plus"></i> Add First Question
+      </button>
+    </div>
+  {% endif %}
+</div>
+
+<!-- Modal: Add Question -->
+<div class="modal-backdrop" id="add-question-modal">
+  <div class="card" style="max-width: 680px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+      <h3 style="font-size: 1.25rem;">Add MCQ Question</h3>
+      <button type="button" class="btn btn-ghost btn-sm" data-modal-close><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <form action="/admin/assessments/{{ assessment.id }}/questions/new" method="POST">
+      <div class="form-group">
+        <label class="form-label" for="add_q_text">Question Prompt *</label>
+        <textarea id="add_q_text" name="question_text" class="form-control" placeholder="What will be the output of the following code snippet?..." required style="min-height: 80px;"></textarea>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">Option A *</label>
+          <input type="text" name="option_a" class="form-control" placeholder="Choice A text" required>
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">Option B *</label>
+          <input type="text" name="option_b" class="form-control" placeholder="Choice B text" required>
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">Option C *</label>
+          <input type="text" name="option_c" class="form-control" placeholder="Choice C text" required>
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">Option D *</label>
+          <input type="text" name="option_d" class="form-control" placeholder="Choice D text" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="add_q_correct">Designated Correct Option *</label>
+        <select id="add_q_correct" name="correct_option" class="form-control" required>
+          <option value="A">Option A</option>
+          <option value="B">Option B</option>
+          <option value="C">Option C</option>
+          <option value="D">Option D</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="add_q_exp">Explanation / Rationale</label>
+        <textarea id="add_q_exp" name="explanation" class="form-control" placeholder="Explain why the designated option is correct for the student review page..."></textarea>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+        <button type="button" class="btn btn-secondary" data-modal-close>Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Question</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Edit Question -->
+<div class="modal-backdrop" id="edit-question-modal">
+  <div class="card" style="max-width: 680px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+      <h3 style="font-size: 1.25rem;">Edit MCQ Question</h3>
+      <button type="button" class="btn btn-ghost btn-sm" data-modal-close><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <form id="edit-question-form" method="POST">
+      <div class="form-group">
+        <label class="form-label">Question Prompt *</label>
+        <textarea id="edit_q_text" name="question_text" class="form-control" required style="min-height: 80px;"></textarea>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">Option A *</label>
+          <input type="text" id="edit_q_a" name="option_a" class="form-control" required>
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">Option B *</label>
+          <input type="text" id="edit_q_b" name="option_b" class="form-control" required>
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">Option C *</label>
+          <input type="text" id="edit_q_c" name="option_c" class="form-control" required>
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">Option D *</label>
+          <input type="text" id="edit_q_d" name="option_d" class="form-control" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Designated Correct Option *</label>
+        <select id="edit_q_correct" name="correct_option" class="form-control" required>
+          <option value="A">Option A</option>
+          <option value="B">Option B</option>
+          <option value="C">Option C</option>
+          <option value="D">Option D</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Explanation</label>
+        <textarea id="edit_q_exp" name="explanation" class="form-control"></textarea>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+        <button type="button" class="btn btn-secondary" data-modal-close>Cancel</button>
+        <button type="submit" class="btn btn-primary">Update Question</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function openEditQuestionModal(qId, text, a, b, c, d, correct, exp) {
+  const modal = document.getElementById("edit-question-modal");
+  const form = document.getElementById("edit-question-form");
+  form.action = `/admin/questions/${qId}/edit`;
+  document.getElementById("edit_q_text").value = text;
+  document.getElementById("edit_q_a").value = a;
+  document.getElementById("edit_q_b").value = b;
+  document.getElementById("edit_q_c").value = c;
+  document.getElementById("edit_q_d").value = d;
+  document.getElementById("edit_q_correct").value = correct;
+  document.getElementById("edit_q_exp").value = exp;
+  modal.style.display = "flex";
+}
+</script>
+{% endblock %}

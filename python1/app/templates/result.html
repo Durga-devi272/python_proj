@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}Assessment Result: {{ assessment.title }} — EduPulse{% endblock %}
+
+{% block content %}
+<div style="background: var(--slate-50); padding: 3.5rem 0; min-height: calc(100vh - 180px);">
+  <div class="container" style="max-width: 860px;">
+    
+    <!-- Top Result Card -->
+    <div class="card" style="text-align: center; padding: 3rem 2rem; margin-bottom: 2.5rem; border: 1px solid var(--border-color); box-shadow: var(--shadow-md);">
+      
+      <div style="width: 76px; height: 76px; border-radius: var(--radius-full); margin: 0 auto 1.25rem; display: flex; align-items: center; justify-content: center; font-size: 2.25rem;
+           background: {% if result.passed %}#ecfdf5; color: #10b981;{% else %}#fef2f2; color: #ef4444;{% endif %}">
+        {% if result.passed %}
+        <i class="fa-solid fa-trophy"></i>
+        {% else %}
+        <i class="fa-solid fa-circle-xmark"></i>
+        {% endif %}
+      </div>
+
+      <span class="badge {% if result.passed %}badge-success{% else %}badge-danger{% endif %}" style="font-size: 0.85rem; padding: 0.4rem 0.9rem; margin-bottom: 0.75rem;">
+        {% if result.passed %}ASSESSMENT PASSED{% else %}NEEDS IMPROVEMENT{% endif %}
+      </span>
+
+      <h1 style="font-size: 2.25rem; color: var(--slate-900); margin-bottom: 0.35rem;">Assessment Completed</h1>
+      <p style="color: var(--slate-500); font-size: 1rem; margin-bottom: 0.75rem;">
+        Course: <strong style="color: var(--slate-800);">{{ course.title }}</strong> &bull; {{ assessment.title }}
+      </p>
+
+      <!-- Topic & Difficulty Telemetry Badges -->
+      <div style="display: flex; justify-content: center; gap: 0.75rem; align-items: center; margin-bottom: 2rem; flex-wrap: wrap;">
+        <span class="badge badge-primary" style="font-size: 0.85rem; padding: 0.35rem 0.85rem;">
+          <i class="fa-solid fa-code" style="margin-right: 4px;"></i> Topic / Skill: {{ assessment.topic or 'General' }}
+        </span>
+        <span class="badge badge-slate" style="background: #e2e8f0; color: #475569; font-size: 0.85rem; padding: 0.35rem 0.85rem;">
+          <i class="fa-solid fa-layer-group" style="margin-right: 4px;"></i> Difficulty: {{ course.difficulty }}
+        </span>
+        {% if user and user.preferred_resource_type %}
+        <span class="badge badge-slate" style="background: #e0e7ff; color: var(--primary); font-size: 0.85rem; padding: 0.35rem 0.85rem;">
+          <i class="fa-solid fa-graduation-cap" style="margin-right: 4px;"></i> Preferred Resource: {{ user.preferred_resource_type }}
+        </span>
+        {% endif %}
+      </div>
+
+      <!-- Key Score Tiles -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1.25rem; max-width: 600px; margin: 0 auto 2.5rem;">
+        <div style="background: var(--slate-50); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem;">
+          <p style="font-size: 0.8rem; font-weight: 700; color: var(--slate-500); text-transform: uppercase;">Final Score</p>
+          <p style="font-size: 2.25rem; font-weight: 800; color: {% if result.passed %}var(--success){% else %}var(--danger){% endif %}; margin: 0.25rem 0;">
+            {{ result.percentage }}%
+          </p>
+          <span style="font-size: 0.75rem; color: var(--slate-400);">Pass mark: {{ assessment.pass_percentage }}%</span>
+        </div>
+
+        <div style="background: var(--slate-50); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem;">
+          <p style="font-size: 0.8rem; font-weight: 700; color: var(--slate-500); text-transform: uppercase;">Correct</p>
+          <p style="font-size: 2.25rem; font-weight: 800; color: var(--success); margin: 0.25rem 0;">
+            {{ result.score }}/{{ result.total_questions }}
+          </p>
+          <span style="font-size: 0.75rem; color: var(--slate-400);">Questions answered correctly</span>
+        </div>
+
+        <div style="background: var(--slate-50); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem;">
+          <p style="font-size: 0.8rem; font-weight: 700; color: var(--slate-500); text-transform: uppercase;">Incorrect</p>
+          <p style="font-size: 2.25rem; font-weight: 800; color: var(--danger); margin: 0.25rem 0;">
+            {{ incorrect_count }}/{{ result.total_questions }}
+          </p>
+          <span style="font-size: 0.75rem; color: var(--slate-400);">Questions missed</span>
+        </div>
+      </div>
+
+      <!-- Performance Indicator Message -->
+      <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem; max-width: 600px; margin: 0 auto 2rem; font-size: 0.95rem; color: var(--slate-700);">
+        {% if result.passed %}
+        <strong style="color: var(--success);"><i class="fa-solid fa-circle-check"></i> {{ perf_tier }}:</strong> Outstanding comprehension! You have demonstrated solid command over the topic <strong>{{ assessment.topic or 'General' }}</strong>.
+        {% else %}
+        <strong style="color: var(--danger);"><i class="fa-solid fa-triangle-exclamation"></i> {{ perf_tier }}:</strong> You were below the {{ assessment.pass_percentage }}% passing threshold. The system has recorded that you are currently <strong>struggling with the topic: {{ assessment.topic or 'General' }}</strong>. Review the lesson materials and detailed question explanations below before retaking.
+        {% endif %}
+      </div>
+
+      <!-- Action Buttons -->
+      <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+        <a href="/courses/{{ course.id }}/assessments/{{ assessment.id }}" class="btn btn-secondary">
+          <i class="fa-solid fa-rotate-left"></i> Retake Assessment
+        </a>
+        <a href="/courses/{{ course.id }}/learn" class="btn btn-primary">
+          <i class="fa-solid fa-play"></i> Continue Learning
+        </a>
+        <a href="/progress" class="btn btn-outline-primary">
+          <i class="fa-solid fa-chart-line"></i> View Progress Analytics
+        </a>
+      </div>
+    </div>
+
+    <!-- Question by Question Review -->
+    <div style="margin-top: 3rem;">
+      <h3 style="font-size: 1.4rem; color: var(--slate-900); margin-bottom: 1.25rem;">
+        Detailed Question Review & Explanations
+      </h3>
+
+      <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+        {% for review in question_reviews %}
+        {% set q = review.question %}
+        <div class="card" style="border: 1px solid {% if review.is_correct %}#a7f3d0{% else %}#fecaca{% endif %}; padding: 1.75rem;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+            <span style="font-size: 0.8rem; font-weight: 700; color: var(--slate-500); text-transform: uppercase;">
+              Question {{ loop.index }}
+            </span>
+            <span class="badge {% if review.is_correct %}badge-success{% else %}badge-danger{% endif %}">
+              {% if review.is_correct %}
+              <i class="fa-solid fa-check"></i> Correct (+1)
+              {% else %}
+              <i class="fa-solid fa-xmark"></i> Incorrect (0)
+              {% endif %}
+            </span>
+          </div>
+
+          <h4 style="font-size: 1.1rem; color: var(--slate-900); margin-bottom: 1.25rem;">
+            {{ q.question_text }}
+          </h4>
+
+          <div style="display: grid; grid-template-columns: 1fr; gap: 0.65rem; margin-bottom: 1.25rem;">
+            <!-- Option A -->
+            <div style="padding: 0.75rem 1rem; border-radius: var(--radius-md); font-size: 0.9rem;
+                 {% if review.correct_choice == 'A' %}background: #ecfdf5; border: 1.5px solid #10b981; color: #065f46; font-weight: 600;
+                 {% elif review.user_choice == 'A' and not review.is_correct %}background: #fef2f2; border: 1.5px solid #ef4444; color: #991b1b;
+                 {% else %}background: var(--slate-50); border: 1px solid var(--slate-200); color: var(--slate-600);{% endif %}">
+              <strong>A.</strong> {{ q.option_a }}
+              {% if review.correct_choice == 'A' %}<span style="float: right; color: var(--success);"><i class="fa-solid fa-check"></i> Correct Answer</span>{% endif %}
+              {% if review.user_choice == 'A' and not review.is_correct %}<span style="float: right; color: var(--danger);"><i class="fa-solid fa-xmark"></i> Your Selection</span>{% endif %}
+            </div>
+
+            <!-- Option B -->
+            <div style="padding: 0.75rem 1rem; border-radius: var(--radius-md); font-size: 0.9rem;
+                 {% if review.correct_choice == 'B' %}background: #ecfdf5; border: 1.5px solid #10b981; color: #065f46; font-weight: 600;
+                 {% elif review.user_choice == 'B' and not review.is_correct %}background: #fef2f2; border: 1.5px solid #ef4444; color: #991b1b;
+                 {% else %}background: var(--slate-50); border: 1px solid var(--slate-200); color: var(--slate-600);{% endif %}">
+              <strong>B.</strong> {{ q.option_b }}
+              {% if review.correct_choice == 'B' %}<span style="float: right; color: var(--success);"><i class="fa-solid fa-check"></i> Correct Answer</span>{% endif %}
+              {% if review.user_choice == 'B' and not review.is_correct %}<span style="float: right; color: var(--danger);"><i class="fa-solid fa-xmark"></i> Your Selection</span>{% endif %}
+            </div>
+
+            <!-- Option C -->
+            <div style="padding: 0.75rem 1rem; border-radius: var(--radius-md); font-size: 0.9rem;
+                 {% if review.correct_choice == 'C' %}background: #ecfdf5; border: 1.5px solid #10b981; color: #065f46; font-weight: 600;
+                 {% elif review.user_choice == 'C' and not review.is_correct %}background: #fef2f2; border: 1.5px solid #ef4444; color: #991b1b;
+                 {% else %}background: var(--slate-50); border: 1px solid var(--slate-200); color: var(--slate-600);{% endif %}">
+              <strong>C.</strong> {{ q.option_c }}
+              {% if review.correct_choice == 'C' %}<span style="float: right; color: var(--success);"><i class="fa-solid fa-check"></i> Correct Answer</span>{% endif %}
+              {% if review.user_choice == 'C' and not review.is_correct %}<span style="float: right; color: var(--danger);"><i class="fa-solid fa-xmark"></i> Your Selection</span>{% endif %}
+            </div>
+
+            <!-- Option D -->
+            <div style="padding: 0.75rem 1rem; border-radius: var(--radius-md); font-size: 0.9rem;
+                 {% if review.correct_choice == 'D' %}background: #ecfdf5; border: 1.5px solid #10b981; color: #065f46; font-weight: 600;
+                 {% elif review.user_choice == 'D' and not review.is_correct %}background: #fef2f2; border: 1.5px solid #ef4444; color: #991b1b;
+                 {% else %}background: var(--slate-50); border: 1px solid var(--slate-200); color: var(--slate-600);{% endif %}">
+              <strong>D.</strong> {{ q.option_d }}
+              {% if review.correct_choice == 'D' %}<span style="float: right; color: var(--success);"><i class="fa-solid fa-check"></i> Correct Answer</span>{% endif %}
+              {% if review.user_choice == 'D' and not review.is_correct %}<span style="float: right; color: var(--danger);"><i class="fa-solid fa-xmark"></i> Your Selection</span>{% endif %}
+            </div>
+          </div>
+
+          <!-- Explanation -->
+          {% if review.explanation %}
+          <div style="background: var(--slate-100); border-radius: var(--radius-md); padding: 1rem; font-size: 0.875rem; color: var(--slate-700);">
+            <strong style="color: var(--slate-900); display: block; margin-bottom: 0.25rem;">
+              <i class="fa-solid fa-circle-info" style="color: var(--primary);"></i> Why this is correct:
+            </strong>
+            {{ review.explanation }}
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

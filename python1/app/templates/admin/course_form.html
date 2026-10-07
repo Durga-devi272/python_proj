@@ -1,0 +1,95 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}{% if is_edit %}Edit Course: {{ course.title }}{% else %}Create New Course{% endif %} — EduPulse Admin{% endblock %}
+
+{% block admin_content %}
+<div class="admin-header">
+  <div>
+    <a href="/admin/courses" style="font-size: 0.85rem; color: var(--slate-500); font-weight: 600;">
+      <i class="fa-solid fa-arrow-left"></i> Back to Courses
+    </a>
+    <h1 style="font-size: 1.85rem; color: var(--slate-900); margin-top: 0.35rem;">
+      {% if is_edit %}Edit Course: {{ course.title }}{% else %}Create New Course{% endif %}
+    </h1>
+    <p style="color: var(--slate-500); font-size: 0.9rem;">
+      Set title, categories, instructor details, and objectives.
+    </p>
+  </div>
+</div>
+
+<div class="card" style="max-width: 800px; padding: 2.25rem;">
+  <form action="{% if is_edit %}/admin/courses/{{ course.id }}/edit{% else %}/admin/courses/new{% endif %}" method="POST">
+    
+    <div class="form-group">
+      <label class="form-label" for="title">Course Title *</label>
+      <input type="text" id="title" name="title" class="form-control" value="{{ course.title if is_edit else '' }}" placeholder="e.g. Master Modern Python Programming" required>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="description">Course Description *</label>
+      <textarea id="description" name="description" class="form-control" placeholder="Provide a detailed, compelling summary of the course content and outcomes..." style="min-height: 110px;" required>{{ course.description if is_edit else '' }}</textarea>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.25rem;">
+      <div class="form-group" style="margin-bottom: 0;">
+        <label class="form-label" for="category">Category *</label>
+        <select id="category" name="category" class="form-control" required>
+          <option value="Python Programming" {% if is_edit and course.category == 'Python Programming' %}selected{% endif %}>Python Programming</option>
+          <option value="Data Structures" {% if is_edit and course.category == 'Data Structures' %}selected{% endif %}>Data Structures & Algorithms</option>
+          <option value="Database Management" {% if is_edit and course.category == 'Database Management' %}selected{% endif %}>Database Management Systems</option>
+          <option value="Web Development" {% if is_edit and course.category == 'Web Development' %}selected{% endif %}>Web Development</option>
+          <option value="Software Architecture" {% if is_edit and course.category == 'Software Architecture' %}selected{% endif %}>Software Architecture</option>
+        </select>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 0;">
+        <label class="form-label" for="difficulty">Difficulty Level *</label>
+        <select id="difficulty" name="difficulty" class="form-control" required>
+          <option value="Beginner" {% if is_edit and course.difficulty == 'Beginner' %}selected{% endif %}>Beginner</option>
+          <option value="Intermediate" {% if is_edit and course.difficulty == 'Intermediate' %}selected{% endif %}>Intermediate</option>
+          <option value="Advanced" {% if is_edit and course.difficulty == 'Advanced' %}selected{% endif %}>Advanced</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.25rem;">
+      <div class="form-group" style="margin-bottom: 0;">
+        <label class="form-label" for="instructor">Instructor Name *</label>
+        <input type="text" id="instructor" name="instructor" class="form-control" value="{{ course.instructor if is_edit else '' }}" placeholder="e.g. Dr. Jane Doe" required>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 0;">
+        <label class="form-label" for="duration">Estimated Duration *</label>
+        <input type="text" id="duration" name="duration" class="form-control" value="{{ course.duration if is_edit else '6 hours' }}" placeholder="e.g. 8 hours" required>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="thumbnail">Thumbnail Image URL</label>
+      <input type="text" id="thumbnail" name="thumbnail" class="form-control" value="{{ course.thumbnail if is_edit else '' }}" placeholder="e.g. https://images.unsplash.com/... or leave blank for dynamic icon">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="learning_objectives">Learning Objectives (One per line)</label>
+      <textarea id="learning_objectives" name="learning_objectives" class="form-control" placeholder="Write clean, modular code&#10;Understand core algorithmic complexities&#10;Design robust relational schemas" style="min-height: 100px;">{{ course.learning_objectives if is_edit else '' }}</textarea>
+    </div>
+
+    <div class="form-group" style="display: flex; align-items: center; gap: 0.75rem; margin-top: 1.5rem;">
+      <input type="checkbox" id="published" name="published" value="true" {% if (is_edit and course.published) or not is_edit %}checked{% endif %} style="width: 18px; height: 18px; accent-color: var(--primary);">
+      <label for="published" style="font-size: 0.95rem; font-weight: 600; color: var(--slate-800); cursor: pointer; margin-bottom: 0;">
+        Publish course immediately (Visible in student catalog)
+      </label>
+    </div>
+
+    <div style="display: flex; gap: 1rem; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
+      <button type="submit" class="btn btn-primary" style="padding: 0.75rem 2rem;">
+        <i class="fa-solid fa-floppy-disk"></i> {% if is_edit %}Save Changes{% else %}Create Course & Setup Curriculum{% endif %}
+      </button>
+      <a href="/admin/courses" class="btn btn-secondary">
+        Cancel
+      </a>
+    </div>
+
+  </form>
+</div>
+{% endblock %}

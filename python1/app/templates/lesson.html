@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}{{ lesson.title }} — {{ course.title }} — EduPulse{% endblock %}
+
+{% block content %}
+<div class="learning-layout">
+  
+  <!-- Left Modules & Lessons Sidebar -->
+  <aside class="learning-sidebar">
+    <div class="learning-sidebar-header">
+      <a href="/courses/{{ course.id }}" style="display: flex; align-items: center; gap: 0.5rem; color: var(--slate-600); font-size: 0.825rem; font-weight: 600; margin-bottom: 0.75rem;">
+        <i class="fa-solid fa-arrow-left"></i> Back to Course Overview
+      </a>
+      <h3 style="font-size: 1.05rem; color: var(--slate-900); margin-bottom: 0.75rem; line-height: 1.3;">
+        {{ course.title }}
+      </h3>
+      <div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.775rem; font-weight: 700; color: var(--slate-600); margin-bottom: 0.35rem;">
+          <span>Progress</span>
+          <span id="course-progress-text">{{ course_progress }}% Completed</span>
+        </div>
+        <div class="progress-container">
+          <div class="progress-bar" id="course-progress-bar" style="width: {{ course_progress }}%;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="learning-module-list">
+      {% for module in course.modules %}
+      <div class="module-header">
+        <span>Module {{ loop.index }}: {{ module.title }}</span>
+      </div>
+
+      <div>
+        {% for l in module.lessons %}
+        {% set is_active = (l.id == lesson.id) %}
+        {% set is_done = (l.id in completed_ids) %}
+        <a href="/courses/{{ course.id }}/lessons/{{ l.id }}" 
+           class="learning-lesson-item {% if is_active %}active{% endif %}">
+          <div class="learning-lesson-status {% if is_done %}status-completed{% elif is_active %}status-active{% else %}status-pending{% endif %}" id="status-icon-{{ l.id }}">
+            {% if is_done %}
+            <i class="fa-solid fa-check"></i>
+            {% elif is_active %}
+            <i class="fa-solid fa-play" style="font-size: 0.65rem;"></i>
+            {% else %}
+            <i class="fa-regular fa-circle" style="font-size: 0.65rem;"></i>
+            {% endif %}
+          </div>
+          <div style="flex: 1; overflow: hidden;">
+            <p style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">{{ l.title }}</p>
+            <span style="font-size: 0.75rem; color: var(--slate-400);"><i class="fa-regular fa-clock"></i> {{ l.duration }}</span>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+      {% endfor %}
+
+      <!-- Assessment Link if course has assessments -->
+      {% if course.assessments | length > 0 %}
+      <div class="module-header" style="background: #fef3c7; color: #b45309; border-top: 1px solid #fde68a;">
+        <span>Course Assessment</span>
+      </div>
+      <div>
+        {% for asm in course.assessments %}
+        <a href="/courses/{{ course.id }}/assessments/{{ asm.id }}" class="learning-lesson-item" style="color: #92400e;">
+          <div class="learning-lesson-status" style="background: #fde68a; color: #b45309;">
+            <i class="fa-solid fa-award"></i>
+          </div>
+          <div>
+            <p style="font-weight: 600;">{{ asm.title }}</p>
+            <span style="font-size: 0.75rem; color: #b45309;">Quiz &bull; {{ asm.questions | length }} questions</span>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </aside>
+
+  <!-- Main Lesson Content Canvas -->
+  <main class="learning-content-pane">
+    <div class="learning-body">
+      <!-- Breadcrumb & Title -->
+      <div style="margin-bottom: 2rem;">
+        <span style="font-size: 0.85rem; font-weight: 600; color: var(--primary); text-transform: uppercase; letter-spacing: 0.04em;">
+          {{ lesson.module.title }}
+        </span>
+        <h1 style="font-size: 2.25rem; color: var(--slate-900); margin: 0.35rem 0 0.5rem; line-height: 1.25;">
+          {{ lesson.title }}
+        </h1>
+        <div style="display: flex; gap: 0.75rem; color: var(--slate-500); font-size: 0.85rem; align-items: center; flex-wrap: wrap;">
+          <span class="badge badge-primary"><i class="fa-solid fa-code" style="margin-right: 4px;"></i> Topic: {{ lesson.topic or 'General' }}</span>
+          <span><i class="fa-regular fa-clock" style="margin-right: 4px;"></i> {{ lesson.duration }}</span>
+          <span>&bull;</span>
+          <span><i class="fa-solid fa-graduation-cap" style="margin-right: 4px;"></i> {{ course.title }}</span>
+          {% if is_current_completed %}
+          <span class="badge badge-success"><i class="fa-solid fa-check"></i> Completed</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Video Area if present -->
+      {% if lesson.video_url %}
+      <div class="video-container">
+        {% if 'youtube.com' in lesson.video_url or 'youtu.be' in lesson.video_url %}
+          {% set yt_url = lesson.video_url.replace('watch?v=', 'embed/') %}
+          <iframe src="{{ yt_url }}" title="{{ lesson.title }}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        {% else %}
+          <div style="height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; background: linear-gradient(135deg, #1e293b, #0f172a);">
+            <i class="fa-solid fa-circle-play" style="font-size: 3.5rem; color: var(--primary); margin-bottom: 1rem;"></i>
+            <h4>Interactive Video Resource Available</h4>
+            <a href="{{ lesson.video_url }}" target="_blank" class="btn btn-primary btn-sm" style="margin-top: 0.75rem;">
+              <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Video Stream
+            </a>
+          </div>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      <!-- Lesson Prose Content -->
+      <article class="lesson-prose">
+        {{ lesson.content | safe }}
+      </article>
+
+      <!-- Learning Resources Box if resource_url is provided -->
+      {% if lesson.resource_url %}
+      <div class="card" style="margin: 2.5rem 0 1.5rem; background: var(--slate-50); border: 1px solid var(--border-color);">
+        <h4 style="font-size: 1.05rem; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+          <i class="fa-solid fa-folder-open" style="color: var(--primary);"></i> Supplemental Resources & Downloads
+        </h4>
+        <p style="font-size: 0.9rem; color: var(--slate-600); margin-bottom: 1rem;">
+          Access the project source code, documentation specifications, and downloadable cheatsheets for this lesson.
+        </p>
+        <a href="{{ lesson.resource_url }}" target="_blank" class="btn btn-secondary btn-sm" style="display: inline-flex;">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Resource Material
+        </a>
+      </div>
+      {% endif %}
+
+      <!-- Important Takeaways Callout -->
+      <div class="callout-box">
+        <h5 style="color: var(--primary-dark); font-size: 0.95rem; font-weight: 700; margin-bottom: 0.35rem;">
+          <i class="fa-solid fa-lightbulb"></i> Key Takeaway
+        </h5>
+        <p style="font-size: 0.9rem; color: var(--slate-700); margin: 0;">
+          Code retention is achieved through active practice. Re-type the snippets into your local development environment or terminal, observe the output, and test variations.
+        </p>
+      </div>
+    </div>
+
+    <!-- Bottom Navigation Bar -->
+    <div class="learning-footer-bar">
+      <div>
+        {% if prev_lesson %}
+        <a href="/courses/{{ course.id }}/lessons/{{ prev_lesson.id }}" class="btn btn-secondary">
+          <i class="fa-solid fa-chevron-left"></i> Previous Lesson
+        </a>
+        {% else %}
+        <span class="btn btn-secondary" style="opacity: 0.4; cursor: not-allowed;">
+          <i class="fa-solid fa-chevron-left"></i> Previous
+        </span>
+        {% endif %}
+      </div>
+
+      <!-- Mark as Complete Button -->
+      <div>
+        {% if is_current_completed %}
+        <button class="btn btn-success" disabled>
+          <i class="fa-solid fa-check"></i> Completed
+        </button>
+        {% else %}
+        <button id="mark-complete-btn" class="btn btn-primary" 
+                onclick="markCurrentLessonComplete({{ lesson.id }}, {{ next_lesson.id if next_lesson else 'null' }}, {{ course.id }})">
+          <i class="fa-solid fa-circle-check"></i> Mark as Complete
+        </button>
+        {% endif %}
+      </div>
+
+      <div>
+        {% if next_lesson %}
+        <a href="/courses/{{ course.id }}/lessons/{{ next_lesson.id }}" class="btn btn-secondary">
+          Next Lesson <i class="fa-solid fa-chevron-right"></i>
+        </a>
+        {% elif course.assessments | length > 0 %}
+        <a href="/courses/{{ course.id }}/assessments/{{ course.assessments[0].id }}" class="btn btn-primary">
+          <i class="fa-solid fa-award"></i> Take Assessment
+        </a>
+        {% else %}
+        <a href="/dashboard" class="btn btn-secondary">
+          Back to Dashboard <i class="fa-solid fa-check"></i>
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </main>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/learning.js"></script>
+{% endblock %}

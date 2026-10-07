@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}Explore Courses — EduPulse{% endblock %}
+
+{% block content %}
+<div style="background: white; border-bottom: 1px solid var(--border-color); padding: 3rem 0 2rem;">
+  <div class="container">
+    <div style="max-width: 680px;">
+      <span class="badge badge-primary" style="margin-bottom: 0.75rem;">Course Marketplace</span>
+      <h1 style="font-size: 2.4rem; color: var(--slate-900); margin-bottom: 0.5rem;">Explore All Courses</h1>
+      <p style="color: var(--slate-500); font-size: 1.05rem;">
+        Master programming fundamentals, advanced algorithmic thinking, relational databases, and modern web architectures.
+      </p>
+    </div>
+
+    <!-- Search & Filter Controls -->
+    <form method="GET" action="/courses" style="margin-top: 2rem;">
+      <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+        <!-- Search Bar -->
+        <div class="input-icon-wrapper" style="flex: 2; min-width: 260px;">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" name="q" value="{{ search_query }}" class="form-control" placeholder="Search by course title, skill, or instructor...">
+        </div>
+
+        <!-- Category Dropdown -->
+        <div style="flex: 1; min-width: 180px;">
+          <select name="category" class="form-control" onchange="this.form.submit()">
+            {% for cat in categories %}
+            <option value="{{ cat }}" {% if selected_category == cat %}selected{% endif %}>{{ cat }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Difficulty Dropdown -->
+        <div style="flex: 1; min-width: 150px;">
+          <select name="difficulty" class="form-control" onchange="this.form.submit()">
+            <option value="All" {% if selected_difficulty == 'All' %}selected{% endif %}>All Difficulties</option>
+            <option value="Beginner" {% if selected_difficulty == 'Beginner' %}selected{% endif %}>Beginner</option>
+            <option value="Intermediate" {% if selected_difficulty == 'Intermediate' %}selected{% endif %}>Intermediate</option>
+            <option value="Advanced" {% if selected_difficulty == 'Advanced' %}selected{% endif %}>Advanced</option>
+          </select>
+        </div>
+
+        <!-- Sort By -->
+        <div style="flex: 1; min-width: 160px;">
+          <select name="sort" class="form-control" onchange="this.form.submit()">
+            <option value="popular" {% if selected_sort == 'popular' %}selected{% endif %}>Most Popular</option>
+            <option value="rating" {% if selected_sort == 'rating' %}selected{% endif %}>Highest Rated</option>
+            <option value="newest" {% if selected_sort == 'newest' %}selected{% endif %}>Newest</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="padding: 0 1.5rem;">
+          <i class="fa-solid fa-filter"></i> Filter
+        </button>
+        {% if search_query or (selected_category != 'All Categories' and selected_category != 'All') or (selected_difficulty != 'All') %}
+        <a href="/courses" class="btn btn-secondary" title="Reset Filters">
+          <i class="fa-solid fa-rotate-left"></i> Reset
+        </a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="container" style="padding: 3rem 1.5rem;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.75rem;">
+    <p style="font-size: 0.95rem; color: var(--slate-500); font-weight: 500;">
+      Showing <strong style="color: var(--slate-900);">{{ courses | length }}</strong> courses available
+    </p>
+  </div>
+
+  {% if courses | length > 0 %}
+  <div class="courses-grid">
+    {% for item in courses %}
+    {% set course = item.course %}
+    <div class="course-card">
+      <div class="course-thumb-wrapper">
+        <div style="font-size: 3rem;">
+          {% if 'Python' in course.title %}
+          <i class="fa-brands fa-python" style="color: #60a5fa;"></i>
+          {% elif 'Data Structures' in course.title %}
+          <i class="fa-solid fa-network-wired" style="color: #c084fc;"></i>
+          {% elif 'Database' in course.title %}
+          <i class="fa-solid fa-database" style="color: #34d399;"></i>
+          {% else %}
+          <i class="fa-solid fa-code" style="color: #f472b6;"></i>
+          {% endif %}
+        </div>
+        <div class="course-thumb-overlay">
+          <span class="badge badge-primary">{{ course.difficulty }}</span>
+          <span class="badge badge-slate" style="background: rgba(15, 23, 42, 0.75); color: white;">
+            <i class="fa-solid fa-star" style="color: #fbbf24;"></i> {{ course.rating }}
+          </span>
+        </div>
+      </div>
+
+      <div class="course-body">
+        <span class="course-category">{{ course.category }}</span>
+        <h3 class="course-title"><a href="/courses/{{ course.id }}" style="color: inherit;">{{ course.title }}</a></h3>
+        <p class="course-desc">{{ course.description }}</p>
+
+        {% if item.is_enrolled %}
+        <!-- Progress Bar if Enrolled -->
+        <div style="margin: 0.5rem 0 0.85rem;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.775rem; font-weight: 600; margin-bottom: 0.25rem;">
+            <span style="color: var(--primary);">Your Progress</span>
+            <span>{{ item.user_progress }}%</span>
+          </div>
+          <div class="progress-container" style="height: 6px;">
+            <div class="progress-bar" style="width: {{ item.user_progress }}%;"></div>
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="course-meta">
+          <span><i class="fa-regular fa-user" style="margin-right: 4px;"></i> {{ course.instructor }}</span>
+          <span><i class="fa-regular fa-clock" style="margin-right: 4px;"></i> {{ course.duration }}</span>
+          <span><i class="fa-solid fa-book-open" style="margin-right: 4px;"></i> {{ item.lessons_count }} Lessons</span>
+        </div>
+      </div>
+
+      <div class="course-footer">
+        {% if item.is_enrolled %}
+        <a href="/courses/{{ course.id }}/learn" class="btn btn-primary btn-block">
+          <i class="fa-solid fa-play"></i> Continue Learning
+        </a>
+        {% else %}
+        <div style="display: flex; gap: 0.5rem;">
+          <a href="/courses/{{ course.id }}" class="btn btn-secondary" style="flex: 1;">
+            Details
+          </a>
+          <form action="/courses/{{ course.id }}/enroll" method="POST" style="flex: 1.2;">
+            <button type="submit" class="btn btn-primary btn-block">
+              <i class="fa-solid fa-graduation-cap"></i> Enroll Free
+            </button>
+          </form>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <!-- Empty State -->
+  <div class="card" style="text-align: center; padding: 4rem 2rem; max-width: 500px; margin: 2rem auto;">
+    <div style="width: 64px; height: 64px; border-radius: var(--radius-full); background: var(--slate-100); color: var(--slate-400); display: flex; align-items: center; justify-content: center; font-size: 1.75rem; margin: 0 auto 1.25rem;">
+      <i class="fa-solid fa-magnifying-glass"></i>
+    </div>
+    <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">No Courses Found</h3>
+    <p style="color: var(--slate-500); font-size: 0.9rem; margin-bottom: 1.5rem;">
+      We couldn't find any courses matching your search criteria. Try modifying your filters or clear your search term.
+    </p>
+    <a href="/courses" class="btn btn-primary">
+      <i class="fa-solid fa-rotate-left"></i> View All Courses
+    </a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

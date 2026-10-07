@@ -1,0 +1,147 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Assessment Management — EduPulse Admin{% endblock %}
+
+{% block admin_content %}
+<div class="admin-header">
+  <div>
+    <h1 style="font-size: 1.85rem; color: var(--slate-900); margin-bottom: 0.25rem;">
+      Quizzes & Assessments
+    </h1>
+    <p style="color: var(--slate-500); font-size: 0.9rem;">
+      Manage MCQ knowledge evaluations, question banks, correct options, and pass criteria.
+    </p>
+  </div>
+
+  <button type="button" class="btn btn-primary" data-modal-target="add-assessment-modal">
+    <i class="fa-solid fa-plus"></i> Create New Assessment
+  </button>
+</div>
+
+<div class="card" style="padding: 0; overflow: hidden;">
+  <div class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Assessment Title</th>
+          <th>Topic / Skill</th>
+          <th>Course</th>
+          <th>Total Questions</th>
+          <th>Passing Threshold</th>
+          <th>Submissions</th>
+          <th style="text-align: right;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in assessments %}
+        <tr>
+          <td>
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <div style="width: 38px; height: 38px; border-radius: var(--radius-sm); background: #fef3c7; color: #d97706; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+                <i class="fa-solid fa-award"></i>
+              </div>
+              <div>
+                <strong>{{ a.title }}</strong>
+                {% if a.description %}<p style="font-size: 0.75rem; color: var(--slate-400);">{{ a.description }}</p>{% endif %}
+              </div>
+            </div>
+          </td>
+          <td>
+            <span class="badge badge-primary" style="font-size: 0.8rem;">
+              <i class="fa-solid fa-code"></i> {{ a.topic or 'General' }}
+            </span>
+          </td>
+          <td>
+            <a href="/courses/{{ a.course_id }}" target="_blank" style="font-weight: 600; color: var(--slate-800);">
+              {{ a.course.title }}
+            </a>
+          </td>
+          <td>
+            <span class="badge badge-slate" style="font-size: 0.8rem;">
+              <i class="fa-solid fa-list-ol"></i> {{ a.questions | length }} Questions
+            </span>
+          </td>
+          <td>
+            <span class="badge badge-warning">{{ a.pass_percentage }}% Required</span>
+          </td>
+          <td>
+            <strong style="color: var(--slate-800);">{{ a.results | length }}</strong> attempts
+          </td>
+          <td style="text-align: right;">
+            <div style="display: inline-flex; gap: 0.35rem;">
+              <a href="/admin/assessments/{{ a.id }}/questions" class="btn btn-secondary btn-sm">
+                <i class="fa-solid fa-list-check"></i> Manage Questions
+              </a>
+              <form action="/admin/assessments/{{ a.id }}/delete" method="POST" style="display: inline;" onsubmit="return confirm('Delete this assessment and its questions?');">
+                <button type="submit" class="btn btn-ghost btn-sm" style="color: var(--danger);">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal: Add Assessment -->
+<div class="modal-backdrop" id="add-assessment-modal">
+  <div class="card" style="max-width: 560px; width: 100%; padding: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+      <h3 style="font-size: 1.25rem;">Create New Assessment</h3>
+      <button type="button" class="btn btn-ghost btn-sm" data-modal-close><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    
+    <form id="create-assessment-form" method="POST" onsubmit="handleAssessmentCreate(event)">
+      <div class="form-group">
+        <label class="form-label" for="asm_course">Associated Course *</label>
+        <select id="asm_course" class="form-control" required>
+          {% for c in courses %}
+          <option value="{{ c.id }}">{{ c.title }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="asm_title">Assessment Title *</label>
+        <input type="text" id="asm_title" name="title" class="form-control" placeholder="e.g. Comprehensive Python Mastery Exam" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="asm_topic">Topic / Skill *</label>
+        <input type="text" id="asm_topic" name="topic" class="form-control" placeholder="e.g. Variables, Loops, Functions, OOP" value="General" required>
+        <small style="color: var(--slate-400); font-size: 0.75rem;">Associates this assessment with a specific skill to track learning & struggling telemetry.</small>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="asm_desc">Description / Instructions</label>
+        <textarea id="asm_desc" name="description" class="form-control" placeholder="Test covering modules 1 through 3..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="asm_pass">Pass Mark Threshold (%)</label>
+        <input type="number" id="asm_pass" name="pass_percentage" class="form-control" value="70.0" min="10" max="100" step="5">
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+        <button type="button" class="btn btn-secondary" data-modal-close>Cancel</button>
+        <button type="submit" class="btn btn-primary">Create Assessment</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function handleAssessmentCreate(e) {
+  e.preventDefault();
+  const courseId = document.getElementById("asm_course").value;
+  const form = document.getElementById("create-assessment-form");
+  form.action = `/admin/courses/${courseId}/assessments/new`;
+  form.submit();
+}
+</script>
+{% endblock %}

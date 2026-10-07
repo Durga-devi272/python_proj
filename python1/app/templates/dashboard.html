@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+
+{% block title %}Student Dashboard — EduPulse{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+  
+  <!-- Student Sidebar -->
+  <aside class="sidebar">
+    <div style="padding: 0 0.75rem 1rem; border-bottom: 1px solid var(--border-color); margin-bottom: 0.5rem;">
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <div class="avatar-circle" style="width: 42px; height: 42px; font-size: 1.1rem;">
+          {{ user.name[0].upper() }}
+        </div>
+        <div>
+          <h4 style="font-size: 0.95rem; margin-bottom: 2px;">{{ user.name }}</h4>
+          <span class="badge badge-primary" style="font-size: 0.65rem;">STUDENT</span>
+        </div>
+      </div>
+    </div>
+
+    <p class="sidebar-title">Menu</p>
+    <a href="/dashboard" class="sidebar-link active">
+      <i class="fa-solid fa-gauge-high"></i> Dashboard
+    </a>
+    <a href="/courses" class="sidebar-link">
+      <i class="fa-solid fa-compass"></i> Explore Courses
+    </a>
+    <a href="/progress" class="sidebar-link">
+      <i class="fa-solid fa-chart-line"></i> Learning Analytics
+    </a>
+    <a href="/profile" class="sidebar-link">
+      <i class="fa-solid fa-user-gear"></i> Profile & Settings
+    </a>
+
+    <p class="sidebar-title" style="margin-top: 1.5rem;">Quick Stats</p>
+    <div style="background: var(--slate-50); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 0.85rem; font-size: 0.825rem; color: var(--slate-600);">
+      <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem;">
+        <span>Completed:</span>
+        <strong style="color: var(--slate-900);">{{ stats.completed_courses_count }}/{{ stats.enrolled_count }}</strong>
+      </div>
+      <div style="display: flex; justify-content: space-between;">
+        <span>Avg Quiz:</span>
+        <strong style="color: var(--primary);">{{ stats.avg_score }}%</strong>
+      </div>
+    </div>
+
+    <div style="margin-top: auto; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
+      <a href="/logout" class="sidebar-link" style="color: var(--danger);">
+        <i class="fa-solid fa-right-from-bracket"></i> Sign Out
+      </a>
+    </div>
+  </aside>
+
+  <!-- Dashboard Main View -->
+  <section class="dashboard-main">
+    
+    <!-- Header -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <h1 style="font-size: 2rem; color: var(--slate-900); margin-bottom: 0.25rem;">
+          Welcome back, {{ user.name.split(' ')[0] }}!
+        </h1>
+        <p style="color: var(--slate-500); font-size: 0.95rem;">
+          Track your progress, continue where you left off, and test your skills.
+        </p>
+      </div>
+
+      <a href="/courses" class="btn btn-primary">
+        <i class="fa-solid fa-plus"></i> Browse New Courses
+      </a>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon" style="background: #e0e7ff; color: var(--primary);">
+          <i class="fa-solid fa-book-bookmark"></i>
+        </div>
+        <div>
+          <p class="stat-val">{{ stats.enrolled_count }}</p>
+          <p class="stat-label">Enrolled Courses</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background: #ecfdf5; color: var(--success);">
+          <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <div>
+          <p class="stat-val">{{ stats.completed_courses_count }}</p>
+          <p class="stat-label">Completed Courses</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background: #e0f2fe; color: #0284c7;">
+          <i class="fa-solid fa-list-check"></i>
+        </div>
+        <div>
+          <p class="stat-val">{{ stats.completed_lessons_count }}</p>
+          <p class="stat-label">Lessons Completed</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background: #fef3c7; color: #d97706;">
+          <i class="fa-solid fa-award"></i>
+        </div>
+        <div>
+          <p class="stat-val">{{ stats.avg_score }}%</p>
+          <p class="stat-label">Average Score</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Two-column: Continue Learning & Performance Chart -->
+    <div style="display: grid; grid-template-columns: 1.25fr 0.75fr; gap: 2rem; margin-bottom: 2.5rem;">
+      
+      <!-- Continue Learning Section -->
+      <div>
+        <h3 style="font-size: 1.3rem; margin-bottom: 1rem; color: var(--slate-900);">Continue Learning</h3>
+        
+        {% if active_courses | length > 0 %}
+        <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+          {% for item in active_courses %}
+          {% set course = item.course %}
+          <div class="card" style="padding: 1.5rem; display: flex; gap: 1.25rem; align-items: center; flex-wrap: wrap;">
+            
+            <div style="width: 60px; height: 60px; border-radius: var(--radius-md); background: linear-gradient(135deg, #1e1b4b, #312e81); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; flex-shrink: 0;">
+              {% if 'Python' in course.title %}
+              <i class="fa-brands fa-python" style="color: #60a5fa;"></i>
+              {% elif 'Data Structures' in course.title %}
+              <i class="fa-solid fa-network-wired" style="color: #c084fc;"></i>
+              {% elif 'Database' in course.title %}
+              <i class="fa-solid fa-database" style="color: #34d399;"></i>
+              {% else %}
+              <i class="fa-solid fa-code" style="color: #f472b6;"></i>
+              {% endif %}
+            </div>
+
+            <div style="flex: 1; min-width: 220px;">
+              <span class="badge badge-primary" style="font-size: 0.65rem; margin-bottom: 0.25rem;">{{ course.category }}</span>
+              <h4 style="font-size: 1.05rem; margin-bottom: 0.25rem;">
+                <a href="/courses/{{ course.id }}" style="color: var(--slate-900);">{{ course.title }}</a>
+              </h4>
+              <p style="font-size: 0.8rem; color: var(--slate-500); margin-bottom: 0.65rem;">
+                Instructor: {{ course.instructor }}
+              </p>
+
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.775rem; font-weight: 600; margin-bottom: 0.25rem;">
+                  <span>Progress</span>
+                  <span style="color: var(--primary);">{{ item.progress }}%</span>
+                </div>
+                <div class="progress-container">
+                  <div class="progress-bar" style="width: {{ item.progress }}%;"></div>
+                </div>
+              </div>
+            </div>
+
+            <div style="text-align: right;">
+              <a href="/courses/{{ course.id }}/learn" class="btn btn-primary btn-sm">
+                <i class="fa-solid fa-play"></i> Continue
+              </a>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <!-- Empty State for Courses -->
+        <div class="card" style="text-align: center; padding: 3rem 1.5rem;">
+          <div style="font-size: 2.5rem; color: var(--slate-300); margin-bottom: 0.75rem;">
+            <i class="fa-solid fa-book-open"></i>
+          </div>
+          <h4 style="font-size: 1.1rem; margin-bottom: 0.35rem;">No Enrolled Courses Yet</h4>
+          <p style="color: var(--slate-500); font-size: 0.875rem; margin-bottom: 1.25rem;">
+            Browse our curated curriculum and enroll in your first course to begin.
+          </p>
+          <a href="/courses" class="btn btn-primary btn-sm">
+            Explore Courses
+          </a>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Performance Chart.js Widget -->
+      <div>
+        <h3 style="font-size: 1.3rem; margin-bottom: 1rem; color: var(--slate-900);">Performance Analytics</h3>
+        
+        <div class="card" style="padding: 1.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <span style="font-size: 0.85rem; font-weight: 600; color: var(--slate-600);">Recent Quiz Scores</span>
+            <span class="badge badge-success"><i class="fa-solid fa-chart-line"></i> Live</span>
+          </div>
+
+          <div style="height: 240px; position: relative;">
+            <canvas id="student-dashboard-chart"></canvas>
+          </div>
+
+          <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--slate-500);">
+            <span>Recent Average</span>
+            <strong style="color: var(--slate-900);">{{ stats.avg_score }}%</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Activity Timeline -->
+    <div>
+      <h3 style="font-size: 1.3rem; margin-bottom: 1rem; color: var(--slate-900);">Recent Activity</h3>
+      
+      <div class="card" style="padding: 1.5rem;">
+        {% if recent_activities | length > 0 %}
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+          {% for act in recent_activities %}
+          <div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 0.85rem; border-bottom: 1px solid var(--slate-100);">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+              <div style="width: 36px; height: 36px; border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; font-size: 0.95rem;
+                   background: {% if act.color == 'emerald' %}#ecfdf5; color: #10b981;{% elif act.color == 'indigo' %}#e0e7ff; color: #4f46e5;{% else %}#fef3c7; color: #f59e0b;{% endif %}">
+                <i class="fa-solid {{ act.icon }}"></i>
+              </div>
+              <div>
+                <p style="font-size: 0.925rem; font-weight: 600; color: var(--slate-800); margin-bottom: 2px;">{{ act.title }}</p>
+                <p style="font-size: 0.8rem; color: var(--slate-500);">Course: {{ act.course }}</p>
+              </div>
+            </div>
+            <span style="font-size: 0.8rem; color: var(--slate-400);">{{ act.timestamp.strftime('%b %d, %H:%M') }}</span>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p style="color: var(--slate-400); font-size: 0.9rem; text-align: center; padding: 1.5rem 0;">
+          No learning activity logged yet. Start studying lessons to populate your timeline!
+        </p>
+        {% endif %}
+      </div>
+    </div>
+
+  </section>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/charts.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const labels = {{ chart_labels_json | safe }};
+  const scores = {{ chart_scores_json | safe }};
+  renderStudentPerformanceChart("student-dashboard-chart", labels, scores);
+});
+</script>
+{% endblock %}

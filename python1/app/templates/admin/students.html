@@ -1,0 +1,148 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Student Directory — EduPulse Admin{% endblock %}
+
+{% block admin_content %}
+<div class="admin-header">
+  <div>
+    <h1 style="font-size: 1.85rem; color: var(--slate-900); margin-bottom: 0.25rem;">
+      Student Directory
+    </h1>
+    <p style="color: var(--slate-500); font-size: 0.9rem;">
+      Monitor active learners, enrollment engagement, average exam performance, and activity timestamps.
+    </p>
+  </div>
+</div>
+
+<div class="card" style="padding: 0; overflow: hidden;">
+  <div class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Student</th>
+          <th>Email Address</th>
+          <th>Preferred Resource</th>
+          <th>Courses Enrolled</th>
+          <th>Completed Courses</th>
+          <th>Avg Quiz Score</th>
+          <th>Last Activity</th>
+          <th style="text-align: right;">Profile Detail</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in students %}
+        {% set u = s.user %}
+        <tr>
+          <td>
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <div class="avatar-circle" style="width: 36px; height: 36px; font-size: 0.9rem;">
+                {{ u.name[0].upper() }}
+              </div>
+              <div>
+                <strong>{{ u.name }}</strong>
+                <p style="font-size: 0.75rem; color: var(--slate-400);">Joined {{ u.created_at.strftime('%b %d, %Y') }}</p>
+              </div>
+            </div>
+          </td>
+          <td>{{ u.email }}</td>
+          <td>
+            <span class="badge badge-slate" style="background: #e0e7ff; color: var(--primary); font-size: 0.75rem;">
+              <i class="fa-solid fa-graduation-cap"></i> {{ u.preferred_resource_type or 'Mixed' }}
+            </span>
+          </td>
+          <td>
+            <span class="badge badge-primary">{{ s.enr_count }} Enrolled</span>
+          </td>
+          <td>
+            <span class="badge badge-success">{{ s.completed_courses }} Completed</span>
+          </td>
+          <td>
+            <strong style="color: {% if s.avg_score >= 70 %}var(--success){% elif s.avg_score > 0 %}var(--warning){% else %}var(--slate-400){% endif %};">
+              {{ s.avg_score }}%
+            </strong>
+          </td>
+          <td>
+            <span style="font-size: 0.85rem; color: var(--slate-500);">
+              {{ s.last_activity.strftime('%b %d, %Y - %H:%M') }}
+            </span>
+          </td>
+          <td style="text-align: right;">
+            <button type="button" class="btn btn-secondary btn-sm" 
+                    onclick="viewStudentModal('{{ u.name | escape }}', '{{ u.email | escape }}', {{ s.enr_count }}, {{ s.completed_courses }}, {{ s.avg_score }}, '{{ u.bio or 'No bio provided.' | escape }}', '{{ u.created_at.strftime('%B %d, %Y') }}', '{{ u.preferred_resource_type or 'Mixed' }}')">
+              <i class="fa-solid fa-id-card"></i> View Stats
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal: Student Stats Drill-down -->
+<div class="modal-backdrop" id="student-detail-modal">
+  <div class="card" style="max-width: 520px; width: 100%; padding: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+      <h3 style="font-size: 1.25rem;">Student Learning Profile</h3>
+      <button type="button" class="btn btn-ghost btn-sm" data-modal-close><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; padding-bottom: 1.25rem; border-bottom: 1px solid var(--border-color);">
+      <div class="avatar-circle" id="m_student_avatar" style="width: 52px; height: 52px; font-size: 1.4rem;">
+        S
+      </div>
+      <div>
+        <h4 id="m_student_name" style="font-size: 1.15rem; color: var(--slate-900); margin-bottom: 2px;"></h4>
+        <p id="m_student_email" style="font-size: 0.85rem; color: var(--slate-500); margin-bottom: 4px;"></p>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+          <span style="font-size: 0.75rem; color: var(--slate-400);">Joined <span id="m_student_joined"></span></span>
+          <span id="m_student_pref" class="badge badge-primary" style="font-size: 0.7rem;"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3 Metrics -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; text-align: center; margin-bottom: 1.5rem;">
+      <div style="background: var(--slate-50); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1rem;">
+        <p id="m_student_enrolled" style="font-size: 1.5rem; font-weight: 800; color: var(--slate-900); line-height: 1;"></p>
+        <span style="font-size: 0.75rem; color: var(--slate-500); text-transform: uppercase;">Enrolled</span>
+      </div>
+      <div style="background: var(--slate-50); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1rem;">
+        <p id="m_student_completed" style="font-size: 1.5rem; font-weight: 800; color: var(--success); line-height: 1;"></p>
+        <span style="font-size: 0.75rem; color: var(--slate-500); text-transform: uppercase;">Finished</span>
+      </div>
+      <div style="background: var(--slate-50); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1rem;">
+        <p id="m_student_avg" style="font-size: 1.5rem; font-weight: 800; color: var(--primary); line-height: 1;"></p>
+        <span style="font-size: 0.75rem; color: var(--slate-500); text-transform: uppercase;">Avg Score</span>
+      </div>
+    </div>
+
+    <div style="background: var(--slate-50); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 1.5rem;">
+      <h5 style="font-size: 0.85rem; font-weight: 700; color: var(--slate-700); margin-bottom: 0.35rem;">Bio & Objectives</h5>
+      <p id="m_student_bio" style="font-size: 0.85rem; color: var(--slate-600); margin: 0;"></p>
+    </div>
+
+    <div style="display: flex; justify-content: flex-end;">
+      <button type="button" class="btn btn-secondary" data-modal-close>Close</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function viewStudentModal(name, email, enrolled, completed, avg, bio, joined, pref) {
+  const modal = document.getElementById("student-detail-modal");
+  document.getElementById("m_student_avatar").innerText = name[0].toUpperCase();
+  document.getElementById("m_student_name").innerText = name;
+  document.getElementById("m_student_email").innerText = email;
+  document.getElementById("m_student_joined").innerText = joined;
+  document.getElementById("m_student_enrolled").innerText = enrolled;
+  document.getElementById("m_student_completed").innerText = completed;
+  document.getElementById("m_student_avg").innerText = avg + "%";
+  document.getElementById("m_student_bio").innerText = bio;
+  document.getElementById("m_student_pref").innerText = "Preference: " + (pref || "Mixed");
+  modal.style.display = "flex";
+}
+</script>
+{% endblock %}

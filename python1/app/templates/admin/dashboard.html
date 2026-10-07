@@ -1,0 +1,204 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Admin Analytics Dashboard — EduPulse{% endblock %}
+
+{% block admin_content %}
+<!-- Admin Header -->
+<div class="admin-header">
+  <div>
+    <h1 style="font-size: 1.85rem; color: var(--slate-900); margin-bottom: 0.25rem;">
+      Platform Analytics Overview
+    </h1>
+    <p style="color: var(--slate-500); font-size: 0.9rem;">
+      Live aggregate metrics across platform students, enrollments, lessons, and assessment evaluations.
+    </p>
+  </div>
+
+  <div style="display: flex; gap: 0.75rem;">
+    <a href="/admin/courses/new" class="btn btn-primary btn-sm">
+      <i class="fa-solid fa-plus"></i> Create Course
+    </a>
+    <a href="/admin/students" class="btn btn-secondary btn-sm">
+      <i class="fa-solid fa-users"></i> View Students
+    </a>
+  </div>
+</div>
+
+<!-- 6 Metrics Cards Grid -->
+<div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin-bottom: 2rem;">
+  <div class="stat-card">
+    <div class="stat-icon" style="background: #e0e7ff; color: var(--primary);">
+      <i class="fa-solid fa-users"></i>
+    </div>
+    <div>
+      <p class="stat-val">{{ stats.total_students }}</p>
+      <p class="stat-label">Total Students</p>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-icon" style="background: #ecfdf5; color: var(--success);">
+      <i class="fa-solid fa-book-open"></i>
+    </div>
+    <div>
+      <p class="stat-val">{{ stats.total_courses }}</p>
+      <p class="stat-label">Total Courses</p>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-icon" style="background: #e0f2fe; color: #0284c7;">
+      <i class="fa-solid fa-user-graduate"></i>
+    </div>
+    <div>
+      <p class="stat-val">{{ stats.total_enrollments }}</p>
+      <p class="stat-label">Total Enrollments</p>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-icon" style="background: #f3e8ff; color: #9333ea;">
+      <i class="fa-solid fa-layer-group"></i>
+    </div>
+    <div>
+      <p class="stat-val">{{ stats.total_lessons }}</p>
+      <p class="stat-label">Total Lessons</p>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-icon" style="background: #fef3c7; color: #d97706;">
+      <i class="fa-solid fa-bars-progress"></i>
+    </div>
+    <div>
+      <p class="stat-val">{{ stats.avg_completion }}%</p>
+      <p class="stat-label">Avg Completion</p>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-icon" style="background: #fee2e2; color: #dc2626;">
+      <i class="fa-solid fa-award"></i>
+    </div>
+    <div>
+      <p class="stat-val">{{ stats.avg_score }}%</p>
+      <p class="stat-label">Avg Quiz Score</p>
+    </div>
+  </div>
+</div>
+
+<!-- Two Chart.js Visualizations -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.75rem; margin-bottom: 2.5rem;">
+  
+  <!-- Enrollment Trends Line Chart -->
+  <div class="card" style="padding: 1.5rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+      <div>
+        <h3 style="font-size: 1.15rem; color: var(--slate-900);">Enrollment Growth Trends</h3>
+        <p style="font-size: 0.8rem; color: var(--slate-500);">Monthly learner enrollment expansion</p>
+      </div>
+      <span class="badge badge-primary"><i class="fa-solid fa-arrow-trend-up"></i> Trajectory</span>
+    </div>
+    <div style="height: 250px; position: relative;">
+      <canvas id="admin-trends-chart"></canvas>
+    </div>
+  </div>
+
+  <!-- Course Popularity Bar Chart -->
+  <div class="card" style="padding: 1.5rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+      <div>
+        <h3 style="font-size: 1.15rem; color: var(--slate-900);">Course Popularity Distribution</h3>
+        <p style="font-size: 0.8rem; color: var(--slate-500);">Top courses ranked by student signups</p>
+      </div>
+      <span class="badge badge-success"><i class="fa-solid fa-ranking-star"></i> Top Demand</span>
+    </div>
+    <div style="height: 250px; position: relative;">
+      <canvas id="admin-popularity-chart"></canvas>
+    </div>
+  </div>
+
+</div>
+
+<!-- Recent Tables (Students & Assessments) -->
+<div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 1.75rem;">
+  
+  <!-- Recent Students -->
+  <div class="card" style="padding: 1.5rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+      <h3 style="font-size: 1.15rem; color: var(--slate-900);">Recent Signups</h3>
+      <a href="/admin/students" style="font-size: 0.85rem; font-weight: 600;">View All</a>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 0.85rem;">
+      {% for s in recent_students %}
+      <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.75rem; border-bottom: 1px solid var(--slate-100);">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <div class="avatar-circle" style="width: 36px; height: 36px; font-size: 0.9rem;">
+            {{ s.name[0].upper() }}
+          </div>
+          <div>
+            <p style="font-size: 0.9rem; font-weight: 600; color: var(--slate-900); margin-bottom: 2px;">{{ s.name }}</p>
+            <p style="font-size: 0.75rem; color: var(--slate-500);">{{ s.email }}</p>
+          </div>
+        </div>
+        <span style="font-size: 0.75rem; color: var(--slate-400);">{{ s.created_at.strftime('%b %d') }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Recent Quiz Submissions -->
+  <div class="card" style="padding: 1.5rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+      <h3 style="font-size: 1.15rem; color: var(--slate-900);">Recent Assessment Submissions</h3>
+      <a href="/admin/assessments" style="font-size: 0.85rem; font-weight: 600;">View Assessments</a>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Quiz</th>
+            <th>Score</th>
+            <th>Status</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in recent_results %}
+          <tr>
+            <td><strong>{{ r.user.name }}</strong></td>
+            <td>{{ r.assessment.title }}</td>
+            <td>{{ r.percentage }}%</td>
+            <td>
+              <span class="badge {% if r.passed %}badge-success{% else %}badge-danger{% endif %}">
+                {% if r.passed %}PASS{% else %}FAIL{% endif %}
+              </span>
+            </td>
+            <td>{{ r.completed_at.strftime('%b %d') }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/charts.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const trendLabels = {{ trend_labels_json | safe }};
+  const trendCounts = {{ trend_counts_json | safe }};
+  renderAdminTrendsChart("admin-trends-chart", trendLabels, trendCounts);
+
+  const popLabels = {{ pop_labels_json | safe }};
+  const popData = {{ pop_data_json | safe }};
+  renderAdminPopularityChart("admin-popularity-chart", popLabels, popData);
+});
+</script>
+{% endblock %}

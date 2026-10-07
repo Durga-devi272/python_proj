@@ -1,0 +1,264 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Curriculum Builder: {{ course.title }} — EduPulse Admin{% endblock %}
+
+{% block admin_content %}
+<div class="admin-header">
+  <div>
+    <a href="/admin/courses" style="font-size: 0.85rem; color: var(--slate-500); font-weight: 600;">
+      <i class="fa-solid fa-arrow-left"></i> Back to Courses
+    </a>
+    <h1 style="font-size: 1.85rem; color: var(--slate-900); margin-top: 0.35rem;">
+      Curriculum Builder: {{ course.title }}
+    </h1>
+    <p style="color: var(--slate-500); font-size: 0.9rem;">
+      Organize course modules and author rich lessons with video streams, code examples, and resources.
+    </p>
+  </div>
+
+  <div style="display: flex; gap: 0.75rem;">
+    <button type="button" class="btn btn-primary btn-sm" data-modal-target="add-module-modal">
+      <i class="fa-solid fa-folder-plus"></i> Add New Module
+    </button>
+    <a href="/courses/{{ course.id }}" target="_blank" class="btn btn-secondary btn-sm">
+      <i class="fa-solid fa-eye"></i> Preview Course
+    </a>
+  </div>
+</div>
+
+<!-- Modules & Lessons Tree -->
+<div style="display: flex; flex-direction: column; gap: 1.75rem; max-width: 960px;">
+  {% if course.modules | length > 0 %}
+    {% for module in course.modules %}
+    <div class="card" style="padding: 0; overflow: hidden; border: 1px solid var(--border-color);">
+      
+      <!-- Module Header Bar -->
+      <div style="background: var(--slate-50); padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <span style="width: 28px; height: 28px; border-radius: var(--radius-sm); background: #e0e7ff; color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem;">
+            {{ loop.index }}
+          </span>
+          <div>
+            <h3 style="font-size: 1.15rem; color: var(--slate-900); margin-bottom: 2px;">{{ module.title }}</h3>
+            {% if module.description %}<p style="font-size: 0.85rem; color: var(--slate-500);">{{ module.description }}</p>{% endif %}
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="openAddLessonModal({{ module.id }}, '{{ module.title | escape }}')">
+            <i class="fa-solid fa-plus"></i> Add Lesson
+          </button>
+          <form action="/admin/modules/{{ module.id }}/delete" method="POST" style="display: inline;" onsubmit="return confirm('Delete this module and all its lessons?');">
+            <button type="submit" class="btn btn-ghost btn-sm" style="color: var(--danger);">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Lessons List -->
+      <div style="padding: 0.5rem 0;">
+        {% if module.lessons | length > 0 %}
+          {% for lesson in module.lessons %}
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.85rem 1.5rem; border-bottom: 1px solid var(--slate-100);">
+            <div style="display: flex; align-items: center; gap: 0.85rem;">
+              <span style="font-size: 0.75rem; color: var(--slate-400); font-weight: 600;">#{{ lesson.order }}</span>
+              <i class="fa-regular fa-file-lines" style="color: var(--primary);"></i>
+              <div>
+                <strong style="color: var(--slate-800); font-size: 0.95rem;">{{ lesson.title }}</strong>
+                <div style="display: flex; gap: 0.75rem; font-size: 0.75rem; color: var(--slate-400); margin-top: 2px; align-items: center; flex-wrap: wrap;">
+                  <span class="badge badge-primary" style="font-size: 0.7rem;"><i class="fa-solid fa-code"></i> {{ lesson.topic or 'General' }}</span>
+                  <span><i class="fa-regular fa-clock"></i> {{ lesson.duration }}</span>
+                  {% if lesson.video_url %}<span><i class="fa-solid fa-video" style="color: var(--success);"></i> Video</span>{% endif %}
+                  {% if lesson.resource_url %}<span><i class="fa-solid fa-link" style="color: var(--info);"></i> Resource</span>{% endif %}
+                </div>
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 0.35rem;">
+              <button type="button" class="btn btn-ghost btn-sm" 
+                      onclick="openEditLessonModal({{ lesson.id }}, '{{ lesson.title | escape }}', `{{ lesson.content | escape }}`, '{{ lesson.video_url or '' }}', '{{ lesson.resource_url or '' }}', '{{ lesson.duration }}', {{ lesson.order }}, '{{ lesson.topic or 'General' }}')">
+                <i class="fa-solid fa-pen"></i> Edit
+              </button>
+              <form action="/admin/lessons/{{ lesson.id }}/delete" method="POST" style="display: inline;" onsubmit="return confirm('Delete this lesson?');">
+                <button type="submit" class="btn btn-ghost btn-sm" style="color: var(--danger);">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </form>
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <p style="padding: 1.5rem; text-align: center; color: var(--slate-400); font-size: 0.875rem;">
+            No lessons added to this module yet. Click "Add Lesson" to get started.
+          </p>
+        {% endif %}
+      </div>
+
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="card" style="text-align: center; padding: 3.5rem 2rem;">
+      <i class="fa-solid fa-folder-tree" style="font-size: 2.5rem; color: var(--slate-300); margin-bottom: 1rem;"></i>
+      <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">No Modules Created Yet</h3>
+      <p style="color: var(--slate-500); font-size: 0.9rem; margin-bottom: 1.5rem;">
+        Start building your syllabus by adding the first module (e.g., "Module 1 — Fundamentals").
+      </p>
+      <button type="button" class="btn btn-primary" data-modal-target="add-module-modal">
+        <i class="fa-solid fa-plus"></i> Add First Module
+      </button>
+    </div>
+  {% endif %}
+</div>
+
+<!-- Modal: Add Module -->
+<div class="modal-backdrop" id="add-module-modal">
+  <div class="card" style="max-width: 500px; width: 100%; padding: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+      <h3 style="font-size: 1.25rem;">Add New Module</h3>
+      <button type="button" class="btn btn-ghost btn-sm" data-modal-close><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <form action="/admin/courses/{{ course.id }}/modules/new" method="POST">
+      <div class="form-group">
+        <label class="form-label" for="mod_title">Module Title *</label>
+        <input type="text" id="mod_title" name="title" class="form-control" placeholder="e.g. Module 1 — Introduction & Setup" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="mod_desc">Description</label>
+        <textarea id="mod_desc" name="description" class="form-control" placeholder="Brief outline of concepts covered in this module..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="mod_order">Display Order</label>
+        <input type="number" id="mod_order" name="order" class="form-control" value="{{ (course.modules | length) + 1 }}" min="1">
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+        <button type="button" class="btn btn-secondary" data-modal-close>Cancel</button>
+        <button type="submit" class="btn btn-primary">Create Module</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Add Lesson -->
+<div class="modal-backdrop" id="add-lesson-modal">
+  <div class="card" style="max-width: 720px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+      <div>
+        <h3 style="font-size: 1.25rem;">Add New Lesson</h3>
+        <p style="font-size: 0.8rem; color: var(--slate-500);" id="add-lesson-module-name"></p>
+      </div>
+      <button type="button" class="btn btn-ghost btn-sm" data-modal-close><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <form id="add-lesson-form" method="POST">
+      <div class="form-group">
+        <label class="form-label">Lesson Title *</label>
+        <input type="text" name="title" class="form-control" placeholder="e.g. Understanding Variables & Memory Allocation" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Topic / Skill *</label>
+        <input type="text" name="topic" class="form-control" placeholder="e.g. Variables, Loops, Functions, OOP" value="General" required>
+        <small style="color: var(--slate-400); font-size: 0.75rem;">Associates this lesson with a curriculum skill to track student topic mastery.</small>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">Duration</label>
+          <input type="text" name="duration" class="form-control" value="15 mins" placeholder="e.g. 20 mins" required>
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">Order</label>
+          <input type="number" name="order" class="form-control" value="1" min="1">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Video URL (YouTube or direct stream)</label>
+        <input type="text" name="video_url" class="form-control" placeholder="e.g. https://www.youtube.com/watch?v=...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Supplemental Resource URL</label>
+        <input type="text" name="resource_url" class="form-control" placeholder="e.g. https://github.com/... or https://docs.python.org">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Lesson Content (HTML / Markdown formatted) *</label>
+        <textarea name="content" class="form-control" placeholder="Write rich explanation, code snippets, notes..." style="min-height: 200px;" required></textarea>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+        <button type="button" class="btn btn-secondary" data-modal-close>Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Lesson</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Edit Lesson -->
+<div class="modal-backdrop" id="edit-lesson-modal">
+  <div class="card" style="max-width: 720px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+      <h3 style="font-size: 1.25rem;">Edit Lesson</h3>
+      <button type="button" class="btn btn-ghost btn-sm" data-modal-close><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <form id="edit-lesson-form" method="POST">
+      <div class="form-group">
+        <label class="form-label">Lesson Title *</label>
+        <input type="text" id="edit_les_title" name="title" class="form-control" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Topic / Skill *</label>
+        <input type="text" id="edit_les_topic" name="topic" class="form-control" placeholder="e.g. Variables, Loops, Functions, OOP" required>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">Duration</label>
+          <input type="text" id="edit_les_duration" name="duration" class="form-control" required>
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">Order</label>
+          <input type="number" id="edit_les_order" name="order" class="form-control" min="1">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Video URL</label>
+        <input type="text" id="edit_les_video" name="video_url" class="form-control">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Resource URL</label>
+        <input type="text" id="edit_les_resource" name="resource_url" class="form-control">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Lesson Content *</label>
+        <textarea id="edit_les_content" name="content" class="form-control" style="min-height: 200px;" required></textarea>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+        <button type="button" class="btn btn-secondary" data-modal-close>Cancel</button>
+        <button type="submit" class="btn btn-primary">Update Lesson</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function openAddLessonModal(moduleId, moduleTitle) {
+  const modal = document.getElementById("add-lesson-modal");
+  const form = document.getElementById("add-lesson-form");
+  const subtitle = document.getElementById("add-lesson-module-name");
+  form.action = `/admin/modules/${moduleId}/lessons/new`;
+  subtitle.innerText = `Adding to: ${moduleTitle}`;
+  modal.style.display = "flex";
+}
+
+function openEditLessonModal(lessonId, title, content, video, resource, duration, order, topic) {
+  const modal = document.getElementById("edit-lesson-modal");
+  const form = document.getElementById("edit-lesson-form");
+  form.action = `/admin/lessons/${lessonId}/edit`;
+  document.getElementById("edit_les_title").value = title;
+  document.getElementById("edit_les_content").value = content;
+  document.getElementById("edit_les_video").value = video;
+  document.getElementById("edit_les_resource").value = resource;
+  document.getElementById("edit_les_duration").value = duration;
+  document.getElementById("edit_les_order").value = order;
+  document.getElementById("edit_les_topic").value = topic || "General";
+  modal.style.display = "flex";
+}
+</script>
+{% endblock %}

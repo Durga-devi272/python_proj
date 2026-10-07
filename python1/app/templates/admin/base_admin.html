@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}EduPulse Admin Center{% endblock %}</title>
+  
+  <!-- Google Fonts & FontAwesome -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="/static/css/style.css">
+  <style>
+    .admin-layout {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      min-height: 100vh;
+    }
+    .admin-sidebar {
+      background: #0f172a;
+      color: #94a3b8;
+      padding: 1.5rem 1rem;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid #1e293b;
+    }
+    .admin-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      color: white;
+      font-size: 1.25rem;
+      font-weight: 800;
+      margin-bottom: 2rem;
+      padding: 0 0.5rem;
+      text-decoration: none;
+    }
+    .admin-nav-link {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      padding: 0.75rem 1rem;
+      color: #94a3b8;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: var(--transition);
+      text-decoration: none;
+      margin-bottom: 0.25rem;
+    }
+    .admin-nav-link:hover {
+      background: #1e293b;
+      color: #f8fafc;
+    }
+    .admin-nav-link.active {
+      background: var(--primary);
+      color: white;
+    }
+    .admin-main {
+      background: var(--bg-main);
+      padding: 2.25rem;
+      overflow-y: auto;
+    }
+    .admin-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1.25rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.6);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+  </style>
+  {% block styles %}{% endblock %}
+</head>
+<body>
+
+<div class="admin-layout">
+  
+  <!-- Sidebar -->
+  <aside class="admin-sidebar">
+    <a href="/admin/dashboard" class="admin-brand">
+      <div class="brand-icon" style="background: linear-gradient(135deg, #6366f1, #a855f7);">
+        <i class="fa-solid fa-shield-halved"></i>
+      </div>
+      <span>Admin Console</span>
+    </a>
+
+    <p style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #475569; letter-spacing: 0.05em; padding: 0 1rem; margin-bottom: 0.5rem;">
+      Management
+    </p>
+
+    <a href="/admin/dashboard" class="admin-nav-link {% if request.url.path == '/admin' or request.url.path == '/admin/dashboard' %}active{% endif %}">
+      <i class="fa-solid fa-chart-pie"></i> Analytics Overview
+    </a>
+    <a href="/admin/courses" class="admin-nav-link {% if '/admin/courses' in request.url.path %}active{% endif %}">
+      <i class="fa-solid fa-book-open"></i> Courses & Curriculum
+    </a>
+    <a href="/admin/assessments" class="admin-nav-link {% if '/admin/assessments' in request.url.path %}active{% endif %}">
+      <i class="fa-solid fa-award"></i> Quizzes & Questions
+    </a>
+    <a href="/admin/students" class="admin-nav-link {% if '/admin/students' in request.url.path %}active{% endif %}">
+      <i class="fa-solid fa-users"></i> Student Directory
+    </a>
+
+    <p style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #475569; letter-spacing: 0.05em; padding: 0 1rem; margin-top: 1.5rem; margin-bottom: 0.5rem;">
+      Public View
+    </p>
+    <a href="/" target="_blank" class="admin-nav-link">
+      <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Student Portal
+    </a>
+    <a href="/courses" target="_blank" class="admin-nav-link">
+      <i class="fa-solid fa-compass"></i> View Marketplace
+    </a>
+
+    <div style="margin-top: auto; padding-top: 1.5rem; border-top: 1px solid #1e293b;">
+      <div style="padding: 0 0.5rem 1rem; display: flex; align-items: center; gap: 0.75rem;">
+        <div class="avatar-circle" style="background: #312e81; color: #a5b4fc; width: 36px; height: 36px;">
+          A
+        </div>
+        <div>
+          <p style="font-size: 0.85rem; font-weight: 600; color: white; line-height: 1.2;">{{ user.name }}</p>
+          <span style="font-size: 0.7rem; color: #64748b;">Administrator</span>
+        </div>
+      </div>
+      <a href="/logout" class="admin-nav-link" style="color: #f87171;">
+        <i class="fa-solid fa-right-from-bracket"></i> Sign Out
+      </a>
+    </div>
+  </aside>
+
+  <!-- Admin Main Content Area -->
+  <main class="admin-main">
+    {% block admin_content %}{% endblock %}
+  </main>
+
+</div>
+
+<script src="/static/js/main.js"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>
